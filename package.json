@@ -16,13 +16,17 @@
     "@types/node": "18.15.11",
     "@types/react": "18.0.34",
     "@types/react-dom": "18.0.11",
+    "accept-language": "^3.0.18",
     "cookie-cutter": "^0.2.0",
     "eslint": "8.38.0",
     "eslint-config-next": "13.3.0",
+    "i18next": "^22.4.14",
+    "intl-pluralrules": "^2.0.0",
     "framer-motion": "^10.11.2",
     "next": "13.3.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-i18next": "^12.2.0",
     "typescript": "5.0.4"
   }
 }
