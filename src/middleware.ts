@@ -6,12 +6,8 @@ import { DEFAULT_LANGUAGE, LANGUAGES } from "./app/i18n/settings";
 
 acceptLanguage.languages(LANGUAGES);
 
-String.prototype.count = function(character: string) {
-  return this.split(character).length - 1;
-}
-
 function doesURLContainsLangParam(url: string) {
-  let isIndex = url.count('/') === 1;
+  let isIndex = url.split('/').length - 1 === 1;
   return LANGUAGES.some((language) => isIndex ? url === `/${language}` : url.startsWith(`/${language}/`));
 }
 
