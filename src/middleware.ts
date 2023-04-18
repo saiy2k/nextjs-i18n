@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 import acceptLanguage from 'accept-language'
 
-import { DEFAULT_LANGUAGE, LANGUAGES } from "./app/i18n/settings";
+import { ALL_LANGUAGES, DEFAULT_LANGUAGE, LANGUAGES } from "./app/i18n/settings";
 
 acceptLanguage.languages(LANGUAGES);
 
+String.prototype.count = function(character: string) {
+  return this.split(character).length - 1;
+}
+
 function doesURLContainsLangParam(url: string) {
-  let isIndex = url.split('/').length - 1 === 1;
-  return LANGUAGES.some((language) => isIndex ? url === `/${language}` : url.startsWith(`/${language}/`));
+  let isIndex = url.count('/') === 1;
+  return ALL_LANGUAGES.some((language) => isIndex ? url === `/${language}` : url.startsWith(`/${language}/`));
 }
 
 function detectLanguage(request: NextRequest) {
@@ -34,26 +38,64 @@ function detectLanguage(request: NextRequest) {
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  const lang = detectLanguage(request);
+  function rewriteWithoutDefaultLanguage() {
+    const destination = `/${DEFAULT_LANGUAGE}/${pathname}`.replace(/\/\//g, '/');
+    return NextResponse.rewrite(
+      new URL(destination, request.url)
+    );
+  }
 
-  if(lang === DEFAULT_LANGUAGE) {
+  let lang = detectLanguage(request);
+  let isSupportedLanguage = true;
+
+  if(!LANGUAGES.includes(lang)) {
+    isSupportedLanguage = false;
+  }
+
+  let res: (NextResponse | null) = null;
+
+  let setCookie = true;
+
+  if(!isSupportedLanguage) {
     if(!doesURLContainsLangParam(pathname)) {
-      const destination = `/${DEFAULT_LANGUAGE}/${pathname}`.replace(/\/\//g, '/');
+      res = rewriteWithoutDefaultLanguage();
+    } else {
+      const frags = pathname.split('/');
+      delete frags[1];
 
-      return NextResponse.rewrite(
+      const destination = `${frags.join('/')}`.replace(/\/\//g, '/');
+      res = NextResponse.redirect(
         new URL(destination, request.url)
       );
+
+      // Here the `lang` will be `en`. If cookie is set, it'll rewrite the existing value.
+      setCookie = false;
     }
   } else {
     if(!doesURLContainsLangParam(pathname)) {
-      const destination = `/${lang}/${pathname}`.replace(/\/\//g, '/');
-      return NextResponse.redirect(
-        new URL(destination, request.url)
-      );
+      if(lang !== DEFAULT_LANGUAGE) {
+        const destination = `/${lang}/${pathname}`.replace(/\/\//g, '/');
+        res = NextResponse.redirect(
+          new URL(destination, request.url)
+        );
+      } else {
+        res = rewriteWithoutDefaultLanguage();
+      }
     }
   }
 
-  return NextResponse.next();
+  if(!res) {
+    res = NextResponse.next();
+  }
+
+  if(setCookie) {
+    res.cookies.set('preferred-language', lang, {
+      path: '/',
+      httpOnly: true,
+    });
+  }
+
+  return res;
 }
 
 export const config = {
