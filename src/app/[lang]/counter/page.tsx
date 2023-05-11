@@ -1,5 +1,6 @@
 'use client'
 
+import Head from 'next/head'
 import { useTranslation } from "@/app/i18n/client";
 import { getURL } from "@/utils/i18n";
 import { Box, Button, Flex, Text } from "@chakra-ui/react";
@@ -13,6 +14,11 @@ export default function CounterPage(props: any) {
     const [ apples, setApples ] = useState(0);
 
     return (
+      <>
+        <Head>
+          <title> Counter title </title>
+          <meta name='description' content='Counter description'></meta>
+        </Head>
         <Flex width='100vw' height='calc(100vh - 80px)' justifyContent='center' alignItems='center'>
             <Box>
                 <h1>Counter</h1>
@@ -27,5 +33,6 @@ export default function CounterPage(props: any) {
             </Box>
 
         </Flex>
+        </>
     );
 }
